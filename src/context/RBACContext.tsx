@@ -15,6 +15,8 @@ import {
   QaTestCase,
   ServerMetric,
   AffiliatePartner,
+  Lead,
+  CallLog,
   RoleDefinition
 } from '../types/rbac';
 import { ROLES_CONFIG } from '../data/rolesConfig';
@@ -30,6 +32,8 @@ import {
   INITIAL_QA_TESTS,
   INITIAL_SERVERS,
   INITIAL_AFFILIATES,
+  INITIAL_LEADS,
+  INITIAL_CALL_LOGS,
   INITIAL_AUDIT_LOGS
 } from '../data/mockData';
 
@@ -54,6 +58,8 @@ interface RBACContextType {
   qaTests: QaTestCase[];
   servers: ServerMetric[];
   affiliates: AffiliatePartner[];
+  leads: Lead[];
+  callLogs: CallLog[];
   auditLogs: AuditLog[];
 
   // RBAC Permission Helpers
@@ -74,6 +80,10 @@ interface RBACContextType {
   updateCMSContent: (id: string, updates: Partial<CMSContent>) => void;
   addStaffMember: (staff: StaffMember) => void;
   updateStaffMember: (id: string, updates: Partial<StaffMember>) => void;
+  addLead: (lead: Lead) => void;
+  updateLead: (leadId: string, updates: Partial<Lead>) => void;
+  addCallLog: (callLog: CallLog) => void;
+  updateCallLog: (callLogId: string, updates: Partial<CallLog>) => void;
   updateRolePermission: (roleId: RoleId, module: ModuleId, actions: PermissionAction[]) => void;
   toggleApiStatus: (apiId: string) => void;
   runQaTest: (testId: string) => void;
@@ -133,6 +143,18 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [servers] = useState<ServerMetric[]>(INITIAL_SERVERS);
   const [affiliates] = useState<AffiliatePartner[]>(INITIAL_AFFILIATES);
+  const [leads, setLeads] = useState<Lead[]>(() => {
+    const saved = localStorage.getItem('aero_leads');
+    const parsed: Lead[] = saved ? JSON.parse(saved) : INITIAL_LEADS;
+    return parsed.map((lead) => ({
+      ...lead,
+      messages: Array.isArray(lead.messages) ? lead.messages : []
+    }));
+  });
+  const [callLogs, setCallLogs] = useState<CallLog[]>(() => {
+    const saved = localStorage.getItem('aero_call_logs');
+    return saved ? JSON.parse(saved) : INITIAL_CALL_LOGS;
+  });
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
     const saved = localStorage.getItem('aero_audit');
@@ -224,8 +246,10 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('aero_cms', JSON.stringify(cmsItems));
     localStorage.setItem('aero_apis', JSON.stringify(apiConfigs));
     localStorage.setItem('aero_qa', JSON.stringify(qaTests));
+    localStorage.setItem('aero_leads', JSON.stringify(leads));
+    localStorage.setItem('aero_call_logs', JSON.stringify(callLogs));
     localStorage.setItem('aero_audit', JSON.stringify(auditLogs));
-  }, [staffMembers, bookings, tickets, transactions, agents, campaigns, cmsItems, apiConfigs, qaTests, auditLogs]);
+  }, [staffMembers, bookings, tickets, transactions, agents, campaigns, cmsItems, apiConfigs, qaTests, leads, callLogs, auditLogs]);
 
   const setActiveRoleId = (newRole: RoleId) => {
     setActiveRoleIdState(newRole);
@@ -305,6 +329,26 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addCampaign = (campaign: MarketingCampaign) => {
     setCampaigns((prev) => [campaign, ...prev]);
     addAuditLog('Created Marketing Campaign', 'marketing', `Campaign ${campaign.title} (${campaign.code || 'Banner'}) created`);
+  };
+
+  const addLead = (lead: Lead) => {
+    setLeads((prev) => [lead, ...prev]);
+    addAuditLog('Added Sales Lead', 'sales', `Lead ${lead.id} created for ${lead.companyName}`);
+  };
+
+  const updateLead = (leadId: string, updates: Partial<Lead>) => {
+    setLeads((prev) => prev.map((lead) => (lead.id === leadId ? { ...lead, ...updates } : lead)));
+    addAuditLog('Updated Sales Lead', 'sales', `Lead ${leadId} updated`);
+  };
+
+  const addCallLog = (callLog: CallLog) => {
+    setCallLogs((prev) => [callLog, ...prev]);
+    addAuditLog('Logged Sales Call', 'sales', `Call log ${callLog.id} saved for ${callLog.leadName}`);
+  };
+
+  const updateCallLog = (callLogId: string, updates: Partial<CallLog>) => {
+    setCallLogs((prev) => prev.map((log) => (log.id === callLogId ? { ...log, ...updates } : log)));
+    addAuditLog('Updated Call Log', 'sales', `Call log ${callLogId} updated`);
   };
 
   const addCMSContent = (cms: CMSContent) => {
@@ -403,6 +447,8 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
         qaTests,
         servers,
         affiliates,
+        leads,
+        callLogs,
         auditLogs,
         hasPermission,
         isModuleAllowed,
@@ -419,6 +465,10 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateCMSContent,
         addStaffMember,
         updateStaffMember,
+        addLead,
+        updateLead,
+        addCallLog,
+        updateCallLog,
         updateRolePermission,
         toggleApiStatus,
         runQaTest

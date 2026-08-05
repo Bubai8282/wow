@@ -65,7 +65,7 @@ export const SuperAdminModule: React.FC = () => {
 
   const filteredLeadMessages = leads
     .flatMap((lead) =>
-      lead.messages.map((message) => ({
+      (lead.messages ?? []).map((message) => ({
         ...message,
         leadId: lead.id,
         leadName: lead.companyName,
