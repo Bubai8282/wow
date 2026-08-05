@@ -19,6 +19,9 @@ import {
   BarChart3,
   Handshake,
   History,
+  ClipboardList,
+  MessageCircle,
+  Phone,
   Lock,
   ChevronRight,
   ChevronLeft,
@@ -32,6 +35,8 @@ interface SidebarProps {
   setActiveModule: (mod: ModuleId) => void;
   showAllModules: boolean;
   setShowAllModules: (show: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
@@ -50,16 +55,21 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   Server,
   BarChart3,
   Handshake,
-  History
+  History,
+  ClipboardList,
+  MessageCircle,
+  Phone
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeModule,
   setActiveModule,
   showAllModules,
-  setShowAllModules
+  setShowAllModules,
+  isOpen,
+  onClose
 }) => {
-  const { isModuleAllowed, activeRoleId, rolesMap, tickets, agents, apiConfigs } = useRBAC();
+  const { isModuleAllowed, activeRoleId, rolesMap, tickets, agents, apiConfigs, leads, callLogs } = useRBAC();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   const roleDef = rolesMap[activeRoleId];
@@ -68,14 +78,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const pendingTicketsCount = tickets.filter((t) => t.status === 'Open' || t.status === 'In Progress').length;
   const pendingAgentsCount = agents.filter((a) => a.status === 'Pending Approval').length;
   const apiDegradedCount = apiConfigs.filter((a) => a.status !== 'Operational').length;
+  const newLeadCount = leads.filter((lead) => lead.status === 'New').length;
+  const totalMessagesCount = leads.flatMap((lead) => lead.messages ?? []).length;
+  const activeCallCount = callLogs.length;
 
   const categories = Array.from(new Set(ALL_MODULES.map((m) => m.category)));
 
   return (
-    <aside
-      className={`bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 min-h-[calc(100vh-4rem)] text-slate-300 select-none transition-all duration-300 ease-in-out relative ${
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+      className={`bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 min-h-[calc(100vh-4rem)] text-slate-300 select-none transition-transform duration-300 ease-in-out relative md:relative md:translate-x-0 ${
         isCollapsed ? 'w-16' : 'w-64'
-      }`}
+      } ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}`}
     >
       {/* Expand/Collapse Toggle Float Button */}
       <button
@@ -118,6 +139,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
+      {!isCollapsed && (
+        <div className="p-3 border-b border-slate-800 bg-slate-950/80">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-slate-300">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+              <div className="text-slate-400 uppercase tracking-wider mb-1">New Leads</div>
+              <div className="text-white text-lg font-semibold">{newLeadCount}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+              <div className="text-slate-400 uppercase tracking-wider mb-1">Messages</div>
+              <div className="text-white text-lg font-semibold">{totalMessagesCount}</div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
+              <div className="text-slate-400 uppercase tracking-wider mb-1">Call Logs</div>
+              <div className="text-white text-lg font-semibold">{activeCallCount}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto p-2 space-y-4">
         {categories.map((category) => {
@@ -153,6 +193,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 } else if (module.id === 'api_config' && apiDegradedCount > 0) {
                   badgeCount = apiDegradedCount;
                   badgeColor = 'bg-rose-500 text-white';
+                } else if (module.id === 'lead_management' && newLeadCount > 0) {
+                  badgeCount = newLeadCount;
+                  badgeColor = 'bg-emerald-500 text-slate-950';
+                } else if (module.id === 'lead_messages' && totalMessagesCount > 0) {
+                  badgeCount = totalMessagesCount;
+                  badgeColor = 'bg-sky-500 text-slate-950';
+                } else if (module.id === 'call_logs' && activeCallCount > 0) {
+                  badgeCount = activeCallCount;
+                  badgeColor = 'bg-fuchsia-500 text-white';
                 }
 
                 return (
@@ -226,22 +275,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* RBAC Sidebar Footer */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/60 text-center">
+      <div className="p-3 border-t border-slate-800 bg-slate-950/60">
         {!isCollapsed ? (
-          <div className="text-[11px] text-slate-400 font-medium">
-            Role Features Active
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] text-slate-400 font-medium">Role Features Active</div>
+            <button
+              onClick={() => setShowAllModules(!showAllModules)}
+              className="px-2 py-1 text-[10px] font-semibold rounded-xl border border-slate-700 text-slate-200 hover:bg-slate-800 transition-colors"
+              title={showAllModules ? 'Show allowed modules only' : 'Show all modules'}
+            >
+              {showAllModules ? 'All Modules' : 'Scoped View'}
+            </button>
           </div>
         ) : (
-          <button
-            onClick={() => setIsCollapsed(false)}
-            className="w-full flex items-center justify-center p-1.5 text-sky-400 hover:text-white transition-colors"
-            title="Expand Sidebar"
-          >
-            <PanelLeftOpen className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="flex items-center justify-center p-1.5 text-sky-400 hover:text-white transition-colors"
+              title="Expand Sidebar"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowAllModules(!showAllModules)}
+              className="p-1 rounded-xl border border-slate-700 text-[10px] font-semibold text-slate-200 hover:bg-slate-800 transition-colors"
+              title={showAllModules ? 'Show allowed modules only' : 'Show all modules'}
+            >
+              {showAllModules ? 'All' : 'Role'}
+            </button>
+          </div>
         )}
       </div>
     </aside>
+    </>
   );
 };
 

@@ -15,13 +15,16 @@ import {
   Sparkles,
   Key,
   LogIn,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuditLogs: () => void;
   onOpenCredentials: () => void;
   onOpenLogin: () => void;
+  onToggleSidebar: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
 }
@@ -30,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuditLogs,
   onOpenCredentials,
   onOpenLogin,
+  onToggleSidebar,
   searchQuery,
   setSearchQuery
 }) => {
@@ -54,6 +58,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Quick Search */}
+          <button
+            onClick={onToggleSidebar}
+            className="inline-flex items-center justify-center p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 md:hidden"
+            title="Toggle sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           <div className="flex-1 max-w-md mx-4 hidden md:block">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

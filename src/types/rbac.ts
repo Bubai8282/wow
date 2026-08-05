@@ -23,6 +23,9 @@ export type ModuleId =
   | 'finance'
   | 'agent_portal'
   | 'sales'
+  | 'lead_management'
+  | 'lead_messages'
+  | 'call_logs'
   | 'marketing'
   | 'content_cms'
   | 'api_config'
@@ -44,7 +47,7 @@ export interface RoleDefinition {
   description: string;
   responsibilities: string[];
   allowedModules: ModuleId[];
-  permissions: Record<ModuleId, PermissionAction[]>;
+  permissions: Partial<Record<ModuleId, PermissionAction[]>>;
 }
 
 export interface StaffMember {

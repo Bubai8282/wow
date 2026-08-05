@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRBAC } from '../../context/RBACContext';
 import { Lead, CallLog, RoleId, ModuleId, PermissionAction, RoleDefinition } from '../../types/rbac';
 import { ALL_MODULES } from '../../data/rolesConfig';
@@ -22,16 +22,71 @@ import {
   PlusCircle
 } from 'lucide-react';
 
-export const SuperAdminModule: React.FC = () => {
-  const { rolesMap, updateRolePermission, addAuditLog, leads, callLogs } = useRBAC();
+interface SuperAdminModuleProps {
+  initialTab?: 'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls';
+}
+
+export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab = 'permissions' }) => {
+  const { rolesMap, updateRolePermission, addAuditLog, addLead, leads, callLogs } = useRBAC();
   const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('operations_manager');
   const [markupRate, setMarkupRate] = useState<number>(4.5);
   const [b2bDefaultCommission, setB2bDefaultCommission] = useState<number>(5.0);
-  const [activeTab, setActiveTab] = useState<'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls'>('permissions');
+  const [activeTab, setActiveTab] = useState<'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls'>(initialTab);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [leadSearch, setLeadSearch] = useState('');
   const [leadMessageSearch, setLeadMessageSearch] = useState('');
   const [callSearch, setCallSearch] = useState('');
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+  const [newLeadCompany, setNewLeadCompany] = useState('');
+  const [newLeadContact, setNewLeadContact] = useState('');
+  const [newLeadEmail, setNewLeadEmail] = useState('');
+  const [newLeadPhone, setNewLeadPhone] = useState('');
+  const [newLeadSource, setNewLeadSource] = useState<Lead['source']>('Website');
+  const [newLeadStatus, setNewLeadStatus] = useState<Lead['status']>('New');
+  const [newLeadAssignedTo, setNewLeadAssignedTo] = useState('Elena Rostova');
+  const [newLeadNotes, setNewLeadNotes] = useState('');
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  const resetNewLeadForm = () => {
+    setNewLeadCompany('');
+    setNewLeadContact('');
+    setNewLeadEmail('');
+    setNewLeadPhone('');
+    setNewLeadSource('Website');
+    setNewLeadStatus('New');
+    setNewLeadAssignedTo('Elena Rostova');
+    setNewLeadNotes('');
+  };
+
+  const handleCreateLead = () => {
+    if (!newLeadCompany || !newLeadContact || !newLeadEmail || !newLeadPhone) {
+      return;
+    }
+
+    const newLead: Lead = {
+      id: `LD-${Date.now().toString().slice(-5)}`,
+      companyName: newLeadCompany,
+      contactName: newLeadContact,
+      email: newLeadEmail,
+      phone: newLeadPhone,
+      source: newLeadSource,
+      status: newLeadStatus,
+      assignedTo: newLeadAssignedTo,
+      createdAt: new Date().toISOString().split('T')[0],
+      lastActivity: 'Just created',
+      notes: newLeadNotes || 'New prospect added via Super Admin dashboard.',
+      messages: []
+    };
+
+    addLead(newLead);
+    addAuditLog('Created New Lead', 'sales', `New lead ${newLead.id} created for ${newLead.companyName}`);
+    resetNewLeadForm();
+    setIsAddLeadOpen(false);
+    setActiveTab('leads');
+  };
 
   const targetRoleDef = rolesMap[selectedRoleForEdit];
 
@@ -162,10 +217,169 @@ export const SuperAdminModule: React.FC = () => {
         </div>
       </div>
 
+      <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+        <div className="text-slate-300 text-sm">
+          <span className="font-semibold text-white">Lead dashboard quick actions:</span> create a new lead, inspect messages, or review call logs from one place.
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('leads');
+              setIsAddLeadOpen(true);
+            }}
+            className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-xs hover:bg-emerald-400 transition-all"
+          >
+            <PlusCircle className="w-4 h-4 inline-block mr-2" />
+            Add New Lead
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('messages')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'messages' ? 'bg-slate-800 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}`}
+          >
+            View Messages
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('calls')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'calls' ? 'bg-slate-800 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}`}
+          >
+            View Call Logs
+          </button>
+        </div>
+      </div>
+
       {savedSuccess && (
         <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           System configurations updated and broadcasted across all platform services.
+        </div>
+      )}
+
+      {isAddLeadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 md:p-10">
+          <div className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl p-6 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-white">Add New Lead</h2>
+                <p className="text-slate-400 text-xs mt-1">Capture the lead details and assign ownership for follow-up tracking.</p>
+              </div>
+              <button
+                onClick={() => setIsAddLeadOpen(false)}
+                className="rounded-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Company Name</span>
+                <input
+                  value={newLeadCompany}
+                  onChange={(e) => setNewLeadCompany(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Acme Corporate Travel"
+                />
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Contact Name</span>
+                <input
+                  value={newLeadContact}
+                  onChange={(e) => setNewLeadContact(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Sara Khan"
+                />
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Email</span>
+                <input
+                  type="email"
+                  value={newLeadEmail}
+                  onChange={(e) => setNewLeadEmail(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="sara.khan@acme.com"
+                />
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Phone</span>
+                <input
+                  value={newLeadPhone}
+                  onChange={(e) => setNewLeadPhone(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="+1 555 134 7890"
+                />
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Source</span>
+                <select
+                  value={newLeadSource}
+                  onChange={(e) => setNewLeadSource(e.target.value as Lead['source'])}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option>Website</option>
+                  <option>Referral</option>
+                  <option>Trade Show</option>
+                  <option>Email Campaign</option>
+                  <option>Partner</option>
+                  <option>Inbound Call</option>
+                </select>
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Status</span>
+                <select
+                  value={newLeadStatus}
+                  onChange={(e) => setNewLeadStatus(e.target.value as Lead['status'])}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option>New</option>
+                  <option>Contacted</option>
+                  <option>Qualified</option>
+                  <option>Proposal Sent</option>
+                  <option>Negotiation</option>
+                  <option>Won</option>
+                  <option>Lost</option>
+                </select>
+              </label>
+              <label className="space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Assigned To</span>
+                <input
+                  value={newLeadAssignedTo}
+                  onChange={(e) => setNewLeadAssignedTo(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Lead Owner"
+                />
+              </label>
+              <label className="lg:col-span-2 space-y-1 text-slate-300">
+                <span className="text-[11px] uppercase tracking-wider text-slate-400">Notes</span>
+                <textarea
+                  value={newLeadNotes}
+                  onChange={(e) => setNewLeadNotes(e.target.value)}
+                  className="w-full min-h-[120px] resize-y bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Enter initial lead notes or qualification details"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  resetNewLeadForm();
+                  setIsAddLeadOpen(false);
+                }}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateLead}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all"
+              >
+                Save Lead
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -381,9 +595,12 @@ export const SuperAdminModule: React.FC = () => {
                   </h3>
                   <p className="text-slate-400 text-[11px]">Create or assign new leads to executive sales owners in a single view.</p>
                 </div>
-                <button className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
-                  New Lead
-                </button>
+                <button
+                    onClick={() => setIsAddLeadOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700"
+                  >
+                    New Lead
+                  </button>
               </div>
               <div className="text-slate-300 text-[11px] space-y-2">
                 <div>Top account owners: Elena Rostova, Marcus Vance, Carlos Mendez</div>

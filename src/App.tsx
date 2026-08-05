@@ -29,6 +29,7 @@ const MainLayout: React.FC = () => {
   const { isModuleAllowed, activeRoleId, rolesMap, isAuthenticated } = useRBAC();
   const [activeModule, setActiveModule] = useState<ModuleId>('super_admin_panel');
   const [showAllModules, setShowAllModules] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState<boolean>(false);
   const [isCredentialsOpen, setIsCredentialsOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -65,7 +66,13 @@ const MainLayout: React.FC = () => {
 
     switch (activeModule) {
       case 'super_admin_panel':
-        return <SuperAdminModule />;
+        return <SuperAdminModule initialTab="permissions" />;
+      case 'lead_management':
+        return <SuperAdminModule initialTab="leads" />;
+      case 'lead_messages':
+        return <SuperAdminModule initialTab="messages" />;
+      case 'call_logs':
+        return <SuperAdminModule initialTab="calls" />;
       case 'operations':
         return <OperationsModule />;
       case 'booking_desk':
@@ -106,7 +113,7 @@ const MainLayout: React.FC = () => {
           </div>
         );
       default:
-        return <SuperAdminModule />;
+        return <SuperAdminModule initialTab="permissions" />;
     }
   };
 
@@ -118,6 +125,7 @@ const MainLayout: React.FC = () => {
         onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
         onOpenCredentials={() => setIsCredentialsOpen(true)}
         onOpenLogin={() => {}}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
@@ -127,9 +135,14 @@ const MainLayout: React.FC = () => {
         {/* Dynamic Sidebar */}
         <Sidebar
           activeModule={activeModule}
-          setActiveModule={setActiveModule}
+          setActiveModule={(module) => {
+            setActiveModule(module);
+            setIsSidebarOpen(false);
+          }}
           showAllModules={showAllModules}
           setShowAllModules={setShowAllModules}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
 
         {/* Main Content Workspace */}
