@@ -1,0 +1,6 @@
+{
+  "name": "AeroAdmin - Flight Booking Control Center",
+  "description": "Enterprise Flight Booking Platform with Role-Based Access Control (RBAC) across 15 administrative roles, including live booking management, finance settlements, B2B agent portal, API sandbox, QA test bench, and system monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
