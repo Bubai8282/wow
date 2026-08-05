@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRBAC } from '../../context/RBACContext';
-import { RoleId, ModuleId, PermissionAction, RoleDefinition } from '../../types/rbac';
+import { Lead, CallLog, RoleId, ModuleId, PermissionAction, RoleDefinition } from '../../types/rbac';
 import { ALL_MODULES } from '../../data/rolesConfig';
 import {
   ShieldAlert,
@@ -14,16 +14,24 @@ import {
   CheckCircle2,
   Sliders,
   Save,
-  Key
+  Key,
+  Phone,
+  ClipboardList,
+  Search,
+  MessageCircle,
+  PlusCircle
 } from 'lucide-react';
 
 export const SuperAdminModule: React.FC = () => {
-  const { rolesMap, updateRolePermission, addAuditLog } = useRBAC();
+  const { rolesMap, updateRolePermission, addAuditLog, leads, callLogs } = useRBAC();
   const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('operations_manager');
   const [markupRate, setMarkupRate] = useState<number>(4.5);
   const [b2bDefaultCommission, setB2bDefaultCommission] = useState<number>(5.0);
-  const [activeTab, setActiveTab] = useState<'permissions' | 'settings' | 'markup'>('permissions');
+  const [activeTab, setActiveTab] = useState<'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls'>('permissions');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [leadSearch, setLeadSearch] = useState('');
+  const [leadMessageSearch, setLeadMessageSearch] = useState('');
+  const [callSearch, setCallSearch] = useState('');
 
   const targetRoleDef = rolesMap[selectedRoleForEdit];
 
@@ -46,6 +54,38 @@ export const SuperAdminModule: React.FC = () => {
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
+
+  const filteredLeads: Lead[] = leads.filter(
+    (lead) =>
+      lead.companyName.toLowerCase().includes(leadSearch.toLowerCase()) ||
+      lead.contactName.toLowerCase().includes(leadSearch.toLowerCase()) ||
+      lead.email.toLowerCase().includes(leadSearch.toLowerCase()) ||
+      lead.phone.toLowerCase().includes(leadSearch.toLowerCase())
+  );
+
+  const filteredLeadMessages = leads
+    .flatMap((lead) =>
+      lead.messages.map((message) => ({
+        ...message,
+        leadId: lead.id,
+        leadName: lead.companyName,
+        contactName: lead.contactName,
+        assignedTo: lead.assignedTo
+      }))
+    )
+    .filter((message) =>
+      message.leadName.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
+      message.contactName.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
+      message.text.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
+      message.sender.toLowerCase().includes(leadMessageSearch.toLowerCase())
+    );
+
+  const filteredCalls: CallLog[] = callLogs.filter(
+    (call) =>
+      call.leadName.toLowerCase().includes(callSearch.toLowerCase()) ||
+      call.agentName.toLowerCase().includes(callSearch.toLowerCase()) ||
+      call.summary.toLowerCase().includes(callSearch.toLowerCase())
+  );
 
   return (
     <div className="p-6 space-y-6 text-slate-100 max-w-7xl mx-auto">
@@ -70,7 +110,7 @@ export const SuperAdminModule: React.FC = () => {
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs">
+        <div className="flex flex-wrap items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs">
           <button
             onClick={() => setActiveTab('permissions')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
@@ -86,6 +126,30 @@ export const SuperAdminModule: React.FC = () => {
             }`}
           >
             Markup & Commissions
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              activeTab === 'leads' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Lead Management
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              activeTab === 'messages' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Lead Messages
+          </button>
+          <button
+            onClick={() => setActiveTab('calls')}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              activeTab === 'calls' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Call Logs
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -257,7 +321,6 @@ export const SuperAdminModule: React.FC = () => {
             </div>
 
           </div>
-
           <div className="pt-2 flex justify-end">
             <button
               onClick={handleSaveSettings}
@@ -270,7 +333,284 @@ export const SuperAdminModule: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: SYSTEM SETTINGS */}
+      {/* TAB 3: LEAD MANAGEMENT */}
+      {activeTab === 'leads' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Users className="w-4 h-4 text-red-400" />
+                Lead Management & Opportunity Pipeline
+              </h2>
+              <p className="text-xs text-slate-400">
+                Monitor new business leads, qualification status, lead assignment, and follow-up scheduling for corporate accounts.
+              </p>
+            </div>
+            <div className="relative text-slate-400 text-xs">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                placeholder="Search leads by company, contact, email or phone"
+                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-xs">
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-emerald-400" />
+                Pipeline Summary
+              </h3>
+              <div className="space-y-3 text-slate-300">
+                <div className="flex justify-between"><span>New Leads</span><strong>{leads.filter((lead) => lead.status === 'New').length}</strong></div>
+                <div className="flex justify-between"><span>Contacted</span><strong>{leads.filter((lead) => lead.status === 'Contacted').length}</strong></div>
+                <div className="flex justify-between"><span>Qualified</span><strong>{leads.filter((lead) => lead.status === 'Qualified').length}</strong></div>
+                <div className="flex justify-between"><span>Proposals Sent</span><strong>{leads.filter((lead) => lead.status === 'Proposal Sent').length}</strong></div>
+                <div className="flex justify-between"><span>Won / Lost</span><strong>{leads.filter((lead) => lead.status === 'Won' || lead.status === 'Lost').length}</strong></div>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-sky-400" />
+                    Quick Lead Actions
+                  </h3>
+                  <p className="text-slate-400 text-[11px]">Create or assign new leads to executive sales owners in a single view.</p>
+                </div>
+                <button className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
+                  New Lead
+                </button>
+              </div>
+              <div className="text-slate-300 text-[11px] space-y-2">
+                <div>Top account owners: Elena Rostova, Marcus Vance, Carlos Mendez</div>
+                <div>Next follow-up: 2 scheduled calls this week</div>
+                <div>Avg. lead response time: 4.1 hrs</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-3">Company</th>
+                  <th className="py-3 px-3">Contact</th>
+                  <th className="py-3 px-3">Source</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Owner</th>
+                  <th className="py-3 px-3">Last Activity</th>
+                  <th className="py-3 px-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredLeads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 px-3 font-semibold text-white">{lead.companyName}</td>
+                    <td className="py-3 px-3 text-slate-300">{lead.contactName} · {lead.phone}</td>
+                    <td className="py-3 px-3 text-slate-400">{lead.source}</td>
+                    <td className="py-3 px-3 text-slate-300"><span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-slate-200">{lead.status}</span></td>
+                    <td className="py-3 px-3 text-slate-300">{lead.assignedTo}</td>
+                    <td className="py-3 px-3 text-slate-400">{lead.lastActivity}</td>
+                    <td className="py-3 px-3 text-slate-400 truncate max-w-[220px]">{lead.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: CALL LOGS */}
+      {activeTab === 'messages' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-red-400" />
+                Lead Messages & Conversation Threads
+              </h2>
+              <p className="text-xs text-slate-400">
+                Review lead conversations in a unified inbox, filter messages, and track response handoff for sales opportunities.
+              </p>
+            </div>
+            <div className="relative text-slate-400 text-xs">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={leadMessageSearch}
+                onChange={(e) => setLeadMessageSearch(e.target.value)}
+                placeholder="Search lead messages by company, contact, sender or content"
+                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-xs">
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-emerald-400" />
+                Message Inbox Summary
+              </h3>
+              <div className="space-y-3 text-slate-300">
+                <div className="flex justify-between"><span>Total Messages</span><strong>{filteredLeadMessages.length}</strong></div>
+                <div className="flex justify-between"><span>Open Lead Threads</span><strong>{leads.filter((lead) => lead.messages.length > 0).length}</strong></div>
+                <div className="flex justify-between"><span>Staff Replies</span><strong>{filteredLeadMessages.filter((msg) => msg.isStaff).length}</strong></div>
+                <div className="flex justify-between"><span>Customer Inquiries</span><strong>{filteredLeadMessages.filter((msg) => !msg.isStaff).length}</strong></div>
+              </div>
+            </div>
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <PlusCircle className="w-4 h-4 text-sky-400" />
+                Quick Message Actions
+              </div>
+              <button className="w-full px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
+                Review Recent Replies
+              </button>
+              <p className="text-slate-400 text-[11px]">See top lead conversations and ensure staff responses remain timely.</p>
+            </div>
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <Users className="w-4 h-4 text-indigo-400" />
+                Top Lead Threads
+              </div>
+              <div className="text-slate-300 text-[11px] space-y-2">
+                {leads.slice(0, 3).map((lead) => (
+                  <div key={lead.id} className="rounded-xl bg-slate-950/80 p-3 border border-slate-800">
+                    <div className="font-semibold text-slate-100">{lead.companyName}</div>
+                    <div>{lead.contactName} · {lead.status}</div>
+                    <div className="text-[11px] text-slate-400">{lead.messages.length} messages · last activity {lead.lastActivity}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-3">Lead / Company</th>
+                  <th className="py-3 px-3">Contact</th>
+                  <th className="py-3 px-3">Sender</th>
+                  <th className="py-3 px-3">Message</th>
+                  <th className="py-3 px-3">Type</th>
+                  <th className="py-3 px-3">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredLeadMessages.map((message, idx) => (
+                  <tr key={`${message.leadId}-${idx}`} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 px-3 font-semibold text-white">{message.leadName}</td>
+                    <td className="py-3 px-3 text-slate-300">{message.contactName}</td>
+                    <td className="py-3 px-3 text-slate-300">{message.sender}</td>
+                    <td className="py-3 px-3 text-slate-400 truncate max-w-[260px]">{message.text}</td>
+                    <td className="py-3 px-3 text-slate-300">{message.isStaff ? 'Staff' : 'Lead'}</td>
+                    <td className="py-3 px-3 text-slate-400">{message.timestamp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'calls' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Phone className="w-4 h-4 text-red-400" />
+                Sales Call Logs & Follow-Up Tracker
+              </h2>
+              <p className="text-xs text-slate-400">
+                Review logged call outcomes, connected conversations, voicemail attempts, and scheduled callbacks.
+              </p>
+            </div>
+            <div className="relative text-slate-400 text-xs">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                value={callSearch}
+                onChange={(e) => setCallSearch(e.target.value)}
+                placeholder="Search call logs by lead, agent, or notes"
+                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                Call Activity Summary
+              </div>
+              <div className="text-slate-300 space-y-2">
+                <div className="flex justify-between"><span>Total Calls</span><strong>{callLogs.length}</strong></div>
+                <div className="flex justify-between"><span>Connected</span><strong>{callLogs.filter((log) => log.outcome === 'Connected').length}</strong></div>
+                <div className="flex justify-between"><span>Callbacks Scheduled</span><strong>{callLogs.filter((log) => log.outcome === 'Callback Scheduled').length}</strong></div>
+                <div className="flex justify-between"><span>Voicemail</span><strong>{callLogs.filter((log) => log.outcome === 'Voicemail').length}</strong></div>
+              </div>
+            </div>
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <ClipboardList className="w-4 h-4 text-sky-400" />
+                Next Follow-Ups
+              </div>
+              <div className="text-slate-300 text-[11px] space-y-2">
+                {callLogs.filter((log) => log.followUpDate).slice(0, 3).map((log) => (
+                  <div key={log.id} className="rounded-xl bg-slate-950/80 p-3 border border-slate-800">
+                    <div className="font-semibold text-slate-100">{log.leadName}</div>
+                    <div>{log.followUpDate} · {log.agentName}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <PlusCircle className="w-4 h-4 text-sky-400" />
+                Quick Call Actions
+              </div>
+              <button className="w-full px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
+                Log New Call
+              </button>
+              <p className="text-slate-400 text-[11px]">Use the sales call record system to capture outcomes and next step commitments.</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <th className="py-3 px-3">Lead</th>
+                  <th className="py-3 px-3">Agent</th>
+                  <th className="py-3 px-3">Call Time</th>
+                  <th className="py-3 px-3">Duration</th>
+                  <th className="py-3 px-3">Outcome</th>
+                  <th className="py-3 px-3">Summary</th>
+                  <th className="py-3 px-3">Follow-Up</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredCalls.map((call) => (
+                  <tr key={call.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 px-3 font-semibold text-white">{call.leadName}</td>
+                    <td className="py-3 px-3 text-slate-300">{call.agentName}</td>
+                    <td className="py-3 px-3 text-slate-400">{call.callTime}</td>
+                    <td className="py-3 px-3 text-slate-400">{call.durationMinutes} mins</td>
+                    <td className="py-3 px-3 text-slate-300">{call.outcome}</td>
+                    <td className="py-3 px-3 text-slate-400 truncate max-w-[220px]">{call.summary}</td>
+                    <td className="py-3 px-3 text-slate-400">{call.followUpDate || 'None'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: SYSTEM SETTINGS */}
       {activeTab === 'settings' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6 text-xs">
           <div className="pb-4 border-b border-slate-800">

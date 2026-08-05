@@ -10,7 +10,9 @@ import {
   QaTestCase,
   ServerMetric,
   AffiliatePartner,
-  AuditLog
+  AuditLog,
+  Lead,
+  CallLog
 } from '../types/rbac';
 
 export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
@@ -643,6 +645,126 @@ export const INITIAL_AFFILIATES: AffiliatePartner[] = [
     totalEarned: 2100.00,
     payoutStatus: 'Pending',
     agreementStatus: 'Active'
+  }
+];
+
+export const INITIAL_LEADS: Lead[] = [
+  {
+    id: 'LD-1001',
+    companyName: 'Global Horizon Travels',
+    contactName: 'Maya Patel',
+    email: 'maya.patel@globalhorizon.com',
+    phone: '+1 555-672-8901',
+    source: 'Referral',
+    status: 'Contacted',
+    assignedTo: 'Elena Rostova',
+    createdAt: '2026-08-02 10:34',
+    lastActivity: '2026-08-04 11:05',
+    notes: 'Interested in corporate ticketing packages for executive teams.',
+    messages: [
+      {
+        sender: 'Maya Patel',
+        text: 'We need quarterly executive travel reporting for 55 seats by end of month.',
+        timestamp: '2026-08-02 10:35',
+        isStaff: false
+      },
+      {
+        sender: 'Elena Rostova',
+        text: 'I have assigned your request to our corporate account team for follow-up.',
+        timestamp: '2026-08-02 13:10',
+        isStaff: true
+      }
+    ]
+  },
+  {
+    id: 'LD-1002',
+    companyName: 'Oceanic Ventures',
+    contactName: 'Rajesh Kumar',
+    email: 'rajesh.kumar@oceanicventures.com',
+    phone: '+44 7700 123456',
+    source: 'Email Campaign',
+    status: 'Qualified',
+    assignedTo: 'Marcus Vance',
+    createdAt: '2026-08-03 15:20',
+    lastActivity: '2026-08-04 09:48',
+    notes: 'Needs a custom weekly reporting package for travel spend.',
+    messages: [
+      {
+        sender: 'Oceanic Ventures Team',
+        text: 'Can your system support real-time budget alerts for aviation expenses?',
+        timestamp: '2026-08-03 15:22',
+        isStaff: false
+      },
+      {
+        sender: 'Marcus Vance',
+        text: 'Yes — we will include a custom alert feed and monthly reconciliation package.',
+        timestamp: '2026-08-03 16:05',
+        isStaff: true
+      }
+    ]
+  },
+  {
+    id: 'LD-1003',
+    companyName: 'Skyline Logistics',
+    contactName: 'Hannah Lee',
+    email: 'hannah.lee@skylinelogistics.com',
+    phone: '+61 412 888 123',
+    source: 'Inbound Call',
+    status: 'Proposal Sent',
+    assignedTo: 'Carlos Mendez',
+    createdAt: '2026-08-04 08:10',
+    lastActivity: '2026-08-04 18:22',
+    notes: 'Requested priority handling for cargo crew and charter flights.',
+    messages: [
+      {
+        sender: 'Hannah Lee',
+        text: 'Please confirm charter crew availability for the week of Aug 17.',
+        timestamp: '2026-08-04 08:12',
+        isStaff: false
+      },
+      {
+        sender: 'Carlos Mendez',
+        text: 'We are confirming availability now and will send a detailed charter quote.',
+        timestamp: '2026-08-04 18:25',
+        isStaff: true
+      }
+    ]
+  }
+];
+
+export const INITIAL_CALL_LOGS: CallLog[] = [
+  {
+    id: 'CL-3021',
+    leadId: 'LD-1002',
+    leadName: 'Oceanic Ventures',
+    agentName: 'Marcus Vance',
+    callTime: '2026-08-04 09:20',
+    durationMinutes: 18,
+    outcome: 'Connected',
+    summary: 'Discussed reporting requirements and special fare rates for team travel.',
+    followUpDate: '2026-08-07'
+  },
+  {
+    id: 'CL-3022',
+    leadId: 'LD-1001',
+    leadName: 'Global Horizon Travels',
+    agentName: 'Elena Rostova',
+    callTime: '2026-08-04 11:02',
+    durationMinutes: 24,
+    outcome: 'Callback Scheduled',
+    summary: 'Scheduled executive package review, follow-up on Monday morning.',
+    followUpDate: '2026-08-05'
+  },
+  {
+    id: 'CL-3023',
+    leadId: 'LD-1003',
+    leadName: 'Skyline Logistics',
+    agentName: 'Carlos Mendez',
+    callTime: '2026-08-04 18:05',
+    durationMinutes: 12,
+    outcome: 'Voicemail',
+    summary: 'Left voicemail requesting confirmation of charter crew dates.',
+    followUpDate: '2026-08-06'
   }
 ];
 

@@ -72,6 +72,38 @@ export interface AuditLog {
   status: 'success' | 'warning' | 'failed';
 }
 
+export interface Lead {
+  id: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  source: 'Website' | 'Referral' | 'Trade Show' | 'Email Campaign' | 'Partner' | 'Inbound Call';
+  status: 'New' | 'Contacted' | 'Qualified' | 'Proposal Sent' | 'Negotiation' | 'Won' | 'Lost';
+  assignedTo: string;
+  createdAt: string;
+  lastActivity: string;
+  notes: string;
+  messages: {
+    sender: string;
+    text: string;
+    timestamp: string;
+    isStaff: boolean;
+  }[];
+}
+
+export interface CallLog {
+  id: string;
+  leadId: string;
+  leadName: string;
+  agentName: string;
+  callTime: string;
+  durationMinutes: number;
+  outcome: 'Connected' | 'Voicemail' | 'No Answer' | 'Callback Scheduled' | 'Not Interested';
+  summary: string;
+  followUpDate?: string;
+}
+
 export interface FlightBooking {
   pnr: string;
   passengerName: string;
