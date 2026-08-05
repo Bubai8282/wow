@@ -4,35 +4,25 @@ import { Lead, CallLog, RoleId, ModuleId, PermissionAction, RoleDefinition } fro
 import { ALL_MODULES } from '../../data/rolesConfig';
 import {
   ShieldAlert,
-  ShieldCheck,
-  Settings,
   Users,
-  Percent,
-  CreditCard,
   Lock,
-  Database,
   CheckCircle2,
-  Sliders,
-  Save,
-  Key,
   Phone,
   ClipboardList,
   Search,
   MessageCircle,
-  PlusCircle
+  PlusCircle,
+  Sliders
 } from 'lucide-react';
 
 interface SuperAdminModuleProps {
-  initialTab?: 'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls';
+  initialTab?: 'permissions' | 'leads' | 'messages' | 'calls';
 }
 
 export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab = 'permissions' }) => {
   const { rolesMap, updateRolePermission, addAuditLog, addLead, leads, callLogs } = useRBAC();
   const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('operations_manager');
-  const [markupRate, setMarkupRate] = useState<number>(4.5);
-  const [b2bDefaultCommission, setB2bDefaultCommission] = useState<number>(5.0);
-  const [activeTab, setActiveTab] = useState<'permissions' | 'settings' | 'markup' | 'leads' | 'messages' | 'calls'>(initialTab);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'permissions' | 'leads' | 'messages' | 'calls'>(initialTab);
   const [leadSearch, setLeadSearch] = useState('');
   const [leadMessageSearch, setLeadMessageSearch] = useState('');
   const [callSearch, setCallSearch] = useState('');
@@ -100,15 +90,6 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
     updateRolePermission(selectedRoleForEdit, module, updatedActions);
   };
 
-  const handleSaveSettings = () => {
-    addAuditLog(
-      'Updated Global System Markup & Commission Settings',
-      'super_admin_panel',
-      `Flight Markup set to ${markupRate}%, B2B Commission set to ${b2bDefaultCommission}%`
-    );
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
-  };
 
   const filteredLeads: Lead[] = leads.filter(
     (lead) =>
@@ -164,98 +145,8 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
           </div>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs">
-          <button
-            onClick={() => setActiveTab('permissions')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'permissions' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            RBAC Permission Matrix
-          </button>
-          <button
-            onClick={() => setActiveTab('markup')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'markup' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Markup & Commissions
-          </button>
-          <button
-            onClick={() => setActiveTab('leads')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'leads' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Lead Management
-          </button>
-          <button
-            onClick={() => setActiveTab('messages')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'messages' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Lead Messages
-          </button>
-          <button
-            onClick={() => setActiveTab('calls')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'calls' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Call Logs
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'settings' ? 'bg-red-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            System Settings
-          </button>
-        </div>
+        {/* No top tabs here. Module navigation is handled by the sidebar only. */}
       </div>
-
-      <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-        <div className="text-slate-300 text-sm">
-          <span className="font-semibold text-white">Lead dashboard quick actions:</span> create a new lead, inspect messages, or review call logs from one place.
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('leads');
-              setIsAddLeadOpen(true);
-            }}
-            className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-semibold text-xs hover:bg-emerald-400 transition-all"
-          >
-            <PlusCircle className="w-4 h-4 inline-block mr-2" />
-            Add New Lead
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('messages')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'messages' ? 'bg-slate-800 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}`}
-          >
-            View Messages
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('calls')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'calls' ? 'bg-slate-800 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}`}
-          >
-            View Call Logs
-          </button>
-        </div>
-      </div>
-
-      {savedSuccess && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          System configurations updated and broadcasted across all platform services.
-        </div>
-      )}
 
       {isAddLeadOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 md:p-10">
@@ -475,74 +366,6 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
                 })}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: MARKUP & COMMISSION SETTINGS */}
-      {activeTab === 'markup' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="pb-4 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Percent className="w-4 h-4 text-red-400" />
-              Global Flight Pricing, Markups & Commission Rules
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Set automated GDS ticket markups, B2B agent commission rates, and tax application.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-            
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-sky-400" />
-                B2C Retail Flight Ticket Markup
-              </h3>
-              <p className="text-slate-400 text-[11px]">
-                Percentage added on top of base GDS fares (Amadeus, Sabre, Travelport) for direct passenger bookings.
-              </p>
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Standard Passenger Flight Markup (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={markupRate}
-                  onChange={(e) => setMarkupRate(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-            </div>
-
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-400" />
-                B2B Travel Agent Default Commission
-              </h3>
-              <p className="text-slate-400 text-[11px]">
-                Default commission paid to registered travel agency partners upon confirmed flight ticket issuance.
-              </p>
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">Default B2B Commission Split (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={b2bDefaultCommission}
-                  onChange={(e) => setB2bDefaultCommission(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-            </div>
-
-          </div>
-          <div className="pt-2 flex justify-end">
-            <button
-              onClick={handleSaveSettings}
-              className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg shadow-red-600/20 transition-all flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Save Markup & Commission Rules
-            </button>
           </div>
         </div>
       )}
@@ -827,43 +650,6 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
         </div>
       )}
 
-      {/* TAB 5: SYSTEM SETTINGS */}
-      {activeTab === 'settings' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6 text-xs">
-          <div className="pb-4 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Settings className="w-4 h-4 text-red-400" />
-              Platform Global Configuration & Master Switches
-            </h2>
-            <p className="text-slate-400 mt-0.5">
-              Control system maintenance mode, backup snapshot execution, and security settings.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
-              <div>
-                <div className="font-bold text-slate-200 text-sm">System Maintenance Mode</div>
-                <div className="text-slate-400 text-[11px]">Temporarily disable B2C customer flight searches during system updates.</div>
-              </div>
-              <input type="checkbox" className="w-4 h-4 text-red-500 rounded bg-slate-900 border-slate-700" />
-            </div>
-
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between">
-              <div>
-                <div className="font-bold text-slate-200 text-sm">Automated Real-Time Database Snapshot</div>
-                <div className="text-slate-400 text-[11px]">Execute scheduled hourly backups of PNRs, financial ledgers, and audit trails.</div>
-              </div>
-              <button
-                onClick={() => addAuditLog('Triggered On-Demand Backup Snapshot', 'super_admin_panel', 'Super Admin executed full DB snapshot')}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-sky-400 border border-slate-700"
-              >
-                Run Backup Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

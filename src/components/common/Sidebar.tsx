@@ -22,6 +22,7 @@ import {
   ClipboardList,
   MessageCircle,
   Phone,
+  Search,
   Lock,
   ChevronRight,
   ChevronLeft,
@@ -71,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { isModuleAllowed, activeRoleId, rolesMap, tickets, agents, apiConfigs, leads, callLogs } = useRBAC();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [moduleSearch, setModuleSearch] = useState<string>('');
 
   const roleDef = rolesMap[activeRoleId];
 
@@ -159,10 +161,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Navigation List */}
+      {!isCollapsed && (
+        <div className="px-3 pb-3 border-b border-slate-800">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Quick Module Search</div>
+            <button
+              onClick={() => setModuleSearch('')}
+              className="text-[10px] text-slate-400 hover:text-white transition-colors"
+              title="Clear module search"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              value={moduleSearch}
+              onChange={(e) => setModuleSearch(e.target.value)}
+              className="w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-2 pl-10 pr-3 text-xs text-slate-200 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              placeholder="Search modules"
+            />
+          </div>
+        </div>
+      )}
       <nav className="flex-1 overflow-y-auto p-2 space-y-4">
         {categories.map((category) => {
           const categoryModules = ALL_MODULES.filter(
-            (m) => m.category === category && (showAllModules || isModuleAllowed(m.id))
+            (m) =>
+              m.category === category &&
+              (showAllModules || isModuleAllowed(m.id)) &&
+              (moduleSearch.trim() === '' ||
+                m.title.toLowerCase().includes(moduleSearch.toLowerCase()) ||
+                m.category.toLowerCase().includes(moduleSearch.toLowerCase()))
           );
           
           if (categoryModules.length === 0) return null;
