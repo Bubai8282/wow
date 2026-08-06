@@ -6,7 +6,7 @@ export const ALL_MODULES: { id: ModuleId; title: string; iconName: string; categ
   { id: 'booking_desk', title: 'Booking Desk & Tickets', iconName: 'Ticket', category: 'Operations' },
   { id: 'customer_support', title: 'Customer Support Desk', iconName: 'Headphones', category: 'Customer' },
   { id: 'finance', title: 'Finance & Payments Hub', iconName: 'Receipt', category: 'Finance' },
-  { id: 'agent_portal', title: 'B2B Agent Portal', iconName: 'Building2', category: 'Commercial' },
+  { id: 'agent_portal', title: 'Travel Agent Dashboard', iconName: 'Building2', category: 'Commercial' },
   { id: 'sales', title: 'Sales & Revenue Dashboard', iconName: 'TrendingUp', category: 'Commercial' },
   { id: 'lead_management', title: 'Lead Management', iconName: 'ClipboardList', category: 'Commercial' },
   { id: 'lead_messages', title: 'Lead Messages Inbox', iconName: 'MessageCircle', category: 'Commercial' },
@@ -23,6 +23,142 @@ export const ALL_MODULES: { id: ModuleId; title: string; iconName: string; categ
 ];
 
 export const ROLES_CONFIG: Record<RoleId, RoleDefinition> = {
+  admin: {
+    id: 'admin',
+    title: 'Admin',
+    category: 'Executive',
+    accessLevel: 'Full CRM Control',
+    badgeColor: 'bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900',
+    description: 'Oversees the full consultancy CRM, team workload, and high-level operations in one place.',
+    responsibilities: [
+      'Track all active cases and operations',
+      'Review team performance and priorities',
+      'Monitor revenue and client progression',
+      'Coordinate cross-functional delivery' 
+    ],
+    allowedModules: ['analytics', 'booking_desk', 'customer_support', 'finance', 'sales'],
+    permissions: {
+      super_admin_panel: ['read'],
+      operations: ['read', 'write', 'create'],
+      booking_desk: ['read', 'write', 'create'],
+      customer_support: ['read', 'write', 'create'],
+      finance: ['read', 'write', 'create'],
+      agent_portal: ['read'],
+      sales: ['read', 'write', 'create'],
+      marketing: ['read'],
+      content_cms: ['read'],
+      api_config: [],
+      qa_testing: [],
+      hr_staff: ['read'],
+      system_infrastructure: [],
+      analytics: ['read', 'export'],
+      affiliate_partners: ['read'],
+      audit_logs: ['read']
+    }
+  },
+
+  consultant: {
+    id: 'consultant',
+    title: 'Consultant',
+    category: 'Client Advisory',
+    accessLevel: 'Case & Client Management',
+    badgeColor: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
+    description: 'Guides clients through visa, relocation, and onboarding processes while maintaining case progress.',
+    responsibilities: [
+      'Manage client consultations and case plans',
+      'Track required documents and follow-ups',
+      'Maintain client communication and milestones',
+      'Prepare case summaries for handover' 
+    ],
+    allowedModules: ['customer_support', 'booking_desk', 'analytics'],
+    permissions: {
+      super_admin_panel: [],
+      operations: ['read'],
+      booking_desk: ['read', 'write', 'create'],
+      customer_support: ['read', 'write', 'create'],
+      finance: ['read'],
+      agent_portal: [],
+      sales: ['read'],
+      marketing: [],
+      content_cms: ['read'],
+      api_config: [],
+      qa_testing: [],
+      hr_staff: [],
+      system_infrastructure: [],
+      analytics: ['read'],
+      affiliate_partners: [],
+      audit_logs: []
+    }
+  },
+
+  finance: {
+    id: 'finance',
+    title: 'Finance',
+    category: 'Revenue Operations',
+    accessLevel: 'Payments & Invoices',
+    badgeColor: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900',
+    description: 'Handles finance approvals, fee collection, invoices, and payment follow-up for the consultancy.',
+    responsibilities: [
+      'Review invoices and pending payments',
+      'Approve or reject fee requests',
+      'Track financial health and refund status',
+      'Support revenue reporting' 
+    ],
+    allowedModules: ['finance', 'analytics'],
+    permissions: {
+      super_admin_panel: [],
+      operations: ['read'],
+      booking_desk: ['read'],
+      customer_support: ['read'],
+      finance: ['read', 'write', 'create', 'approve'],
+      agent_portal: [],
+      sales: ['read'],
+      marketing: [],
+      content_cms: [],
+      api_config: [],
+      qa_testing: [],
+      hr_staff: [],
+      system_infrastructure: [],
+      analytics: ['read', 'export'],
+      affiliate_partners: ['read'],
+      audit_logs: []
+    }
+  },
+
+  operations: {
+    id: 'operations',
+    title: 'Operations',
+    category: 'Delivery & Coordination',
+    accessLevel: 'Execution Control',
+    badgeColor: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-900',
+    description: 'Coordinates scheduling, document handling, case delivery, and operational escalations.',
+    responsibilities: [
+      'Track case delivery and handoffs',
+      'Schedule consultations and appointments',
+      'Coordinate document submissions and follow-ups',
+      'Escalate blockers to the correct team' 
+    ],
+    allowedModules: ['operations', 'customer_support', 'analytics'],
+    permissions: {
+      super_admin_panel: [],
+      operations: ['read', 'write', 'create'],
+      booking_desk: ['read', 'write', 'create'],
+      customer_support: ['read', 'write', 'create'],
+      finance: ['read'],
+      agent_portal: [],
+      sales: ['read'],
+      marketing: [],
+      content_cms: ['read'],
+      api_config: [],
+      qa_testing: [],
+      hr_staff: [],
+      system_infrastructure: [],
+      analytics: ['read'],
+      affiliate_partners: [],
+      audit_logs: []
+    }
+  },
+
   super_admin: {
     id: 'super_admin',
     title: 'Super Admin',
