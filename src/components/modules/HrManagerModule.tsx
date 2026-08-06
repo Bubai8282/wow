@@ -9,7 +9,7 @@ export const HrManagerModule: React.FC = () => {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [roleId, setRoleId] = useState<RoleId>('booking_executive');
+  const [roleId, setRoleId] = useState<RoleId>('operations');
   const [dept, setDept] = useState('Flight Operations');
 
   const canProvision = hasPermission('hr_staff', 'create');

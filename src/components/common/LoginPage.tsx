@@ -126,11 +126,10 @@ export const LoginPage: React.FC<LoginPageProps> = () => {
         <div className="px-6 sm:px-8 py-3.5 bg-slate-950/80 border-t border-slate-800 text-center text-[11px] text-slate-400 flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            15 Role-Isolated Dashboards
+            4 Role-Isolated Dashboards
           </span>
           <span className="font-mono text-slate-400">Secure GDS Session</span>
         </div>
-
       </div>
     </div>
   );

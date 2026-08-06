@@ -21,7 +21,7 @@ interface SuperAdminModuleProps {
 
 export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab = 'permissions' }) => {
   const { rolesMap, updateRolePermission, addAuditLog, addLead, leads, callLogs } = useRBAC();
-  const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('operations_manager');
+  const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('agent');
   const [activeTab, setActiveTab] = useState<'permissions' | 'leads' | 'messages' | 'calls'>(initialTab);
   const [leadSearch, setLeadSearch] = useState('');
   const [leadMessageSearch, setLeadMessageSearch] = useState('');
@@ -140,7 +140,7 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Full System Control: Configure all 15 Admin Roles, fine-grained RBAC matrix, markup rules, API credentials & platform settings.
+              Full System Control: Configure the four role dashboards, fine-grained RBAC permissions, and platform financial and operations settings.
             </p>
           </div>
         </div>

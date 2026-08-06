@@ -1,19 +1,8 @@
 export type RoleId =
   | 'super_admin'
-  | 'operations_manager'
-  | 'booking_executive'
-  | 'customer_support'
-  | 'finance_manager'
-  | 'agent_manager'
-  | 'sales_manager'
-  | 'marketing_manager'
-  | 'content_manager'
-  | 'api_manager'
-  | 'qa_tester'
-  | 'hr_manager'
-  | 'system_admin'
-  | 'analytics_manager'
-  | 'affiliate_manager';
+  | 'agent'
+  | 'finance'
+  | 'operations';
 
 export type ModuleId =
   | 'super_admin_panel'

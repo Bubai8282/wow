@@ -69,13 +69,13 @@ export const CredentialsModal: React.FC<CredentialsModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                All Dashboard User Credentials & Passwords
+                Dashboard User Credentials & Passwords
                 <span className="text-xs bg-sky-500/20 text-sky-300 font-semibold px-2 py-0.5 rounded-full border border-sky-500/30">
-                  15 Roles
+                  4 Roles
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Authorized credentials for accessing every specialized administrative dashboard module.
+                Authorized credentials for accessing the four supported dashboard roles.
               </p>
             </div>
           </div>
