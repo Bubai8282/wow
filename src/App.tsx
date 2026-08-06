@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { RBACProvider, useRBAC } from './context/RBACContext';
-import { ModuleId, RoleId } from './types/rbac';
+import { ModuleId } from './types/rbac';
 import { Header } from './components/common/Header';
 import { Sidebar } from './components/common/Sidebar';
 import { PermissionDenied } from './components/common/PermissionDenied';
 import { AuditLogModal } from './components/common/AuditLogModal';
 import { CredentialsModal } from './components/common/CredentialsModal';
 import { LoginPage } from './components/common/LoginPage';
-import { DemoRoleDashboard } from './components/modules/DemoRoleDashboard';
 
 // Module Component Imports
 import { SuperAdminModule } from './components/modules/SuperAdminModule';
@@ -27,7 +26,7 @@ import { AnalyticsModule } from './components/modules/AnalyticsModule';
 import { AffiliateModule } from './components/modules/AffiliateModule';
 
 const MainLayout: React.FC = () => {
-  const { isModuleAllowed, activeRoleId, rolesMap, isAuthenticated, setActiveRoleId } = useRBAC();
+  const { isModuleAllowed, activeRoleId, rolesMap, isAuthenticated } = useRBAC();
   const [activeModule, setActiveModule] = useState<ModuleId>('super_admin_panel');
   const [showAllModules, setShowAllModules] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -44,18 +43,11 @@ const MainLayout: React.FC = () => {
     }
   }, [activeRoleId]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setActiveRoleId('admin');
-    }
-  }, [isAuthenticated, setActiveRoleId]);
-
-  const demoRole = activeRoleId === 'consultant' || activeRoleId === 'finance' || activeRoleId === 'operations' ? activeRoleId : 'admin';
-
+  // If not authenticated, render the dedicated Login Page
   if (!isAuthenticated) {
     return (
       <>
-        <DemoRoleDashboard role={demoRole} />
+        <LoginPage onOpenCredentials={() => setIsCredentialsOpen(true)} />
         <CredentialsModal
           isOpen={isCredentialsOpen}
           onClose={() => setIsCredentialsOpen(false)}

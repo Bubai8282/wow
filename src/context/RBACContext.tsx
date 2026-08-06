@@ -253,9 +253,7 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setActiveRoleId = (newRole: RoleId) => {
     setActiveRoleIdState(newRole);
-    if (newRole in ROLES_CONFIG) {
-      addAuditLog('Switched Active Admin Role', 'super_admin_panel', `Switched active identity to ${ROLES_CONFIG[newRole].title}`);
-    }
+    addAuditLog('Switched Active Admin Role', 'super_admin_panel', `Switched active identity to ${ROLES_CONFIG[newRole].title}`);
   };
 
   const isModuleAllowed = (module: ModuleId): boolean => {

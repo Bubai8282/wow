@@ -13,11 +13,7 @@ export type RoleId =
   | 'hr_manager'
   | 'system_admin'
   | 'analytics_manager'
-  | 'affiliate_manager'
-  | 'admin'
-  | 'consultant'
-  | 'finance'
-  | 'operations';
+  | 'affiliate_manager';
 
 export type ModuleId =
   | 'super_admin_panel'
