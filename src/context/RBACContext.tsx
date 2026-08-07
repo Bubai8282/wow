@@ -81,6 +81,7 @@ interface RBACContextType {
   addStaffMember: (staff: StaffMember) => void;
   updateStaffMember: (id: string, updates: Partial<StaffMember>) => void;
   addLead: (lead: Lead) => void;
+  removeLead: (leadId: string) => void;
   updateLead: (leadId: string, updates: Partial<Lead>) => void;
   addCallLog: (callLog: CallLog) => void;
   updateCallLog: (callLogId: string, updates: Partial<CallLog>) => void;
@@ -341,6 +342,11 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addAuditLog('Updated Sales Lead', 'sales', `Lead ${leadId} updated`);
   };
 
+  const removeLead = (leadId: string) => {
+    setLeads((prev) => prev.filter((lead) => lead.id !== leadId));
+    addAuditLog('Deleted Sales Lead', 'sales', `Lead ${leadId} removed by admin`);
+  };
+
   const addCallLog = (callLog: CallLog) => {
     setCallLogs((prev) => [callLog, ...prev]);
     addAuditLog('Logged Sales Call', 'sales', `Call log ${callLog.id} saved for ${callLog.leadName}`);
@@ -467,6 +473,7 @@ export const RBACProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateStaffMember,
         addLead,
         updateLead,
+        removeLead,
         addCallLog,
         updateCallLog,
         updateRolePermission,

@@ -8,6 +8,10 @@ import {
   MessageCircle,
   PlusCircle,
   Bell,
+  Eye,
+  Play,
+  UserPlus,
+  Trash,
   Moon,
   Sun,
   Sparkles,
@@ -31,7 +35,7 @@ interface SuperAdminModuleProps {
 }
 
 export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialView = 'dashboard' }) => {
-  const { addAuditLog, addLead, leads, callLogs, agents, tickets, transactions } = useRBAC();
+  const { addAuditLog, addLead, leads, callLogs, agents, tickets, transactions, updateLead, removeLead } = useRBAC();
   const [activeView, setActiveView] = useState(initialView);
   const [isDark, setIsDark] = useState(true);
   const [leadSearch, setLeadSearch] = useState('');
@@ -110,6 +114,34 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialView 
   const filteredCalls: CallLog[] = callLogs.filter((call) =>
     [call.leadName, call.agentName, call.summary].some((value) => value.toLowerCase().includes(callSearch.toLowerCase()))
   );
+
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+
+  const openMessages = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsMessagesOpen(true);
+  };
+
+  const openView = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsViewOpen(true);
+  };
+
+  const handleAssign = (lead: Lead) => {
+    const assignee = window.prompt('Assign lead to (enter staff name):', lead.assignedTo || '');
+    if (assignee) {
+      updateLead(lead.id, { assignedTo: assignee });
+      addAuditLog('Assigned Lead', 'leads', `Lead ${lead.id} assigned to ${assignee}`);
+    }
+  };
+
+  const handleDelete = (lead: Lead) => {
+    if (window.confirm(`Delete lead ${lead.id}? This action cannot be undone.`)) {
+      removeLead(lead.id);
+    }
+  };
 
   const kpiCards = [
     { title: 'Total Leads', value: leads.length, change: '+12%', trend: 'up', icon: ClipboardList },
@@ -305,7 +337,22 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialView 
                       <td className="py-3 px-4 text-slate-300">{lead.status}</td>
                       <td className="py-3 px-4 text-slate-300">{lead.assignedTo}</td>
                       <td className="py-3 px-4 text-slate-300">{lead.createdAt}</td>
-                      <td className="py-3 px-4 text-slate-300">● ● ●</td>
+                      <td className="py-3 px-4 text-slate-300">
+                        <div className="flex items-center gap-3">
+                          <button title="View" onClick={() => openView(lead)} className="p-1 rounded-full hover:bg-slate-800">
+                            <Eye className="w-4 h-4 text-slate-200" />
+                          </button>
+                          <button title="Open Chat" onClick={() => openMessages(lead)} className="p-1 rounded-full hover:bg-slate-800">
+                            <Play className="w-4 h-4 text-sky-400" />
+                          </button>
+                          <button title="Assign" onClick={() => handleAssign(lead)} className="p-1 rounded-full hover:bg-slate-800">
+                            <UserPlus className="w-4 h-4 text-amber-400" />
+                          </button>
+                          <button title="Delete" onClick={() => handleDelete(lead)} className="p-1 rounded-full hover:bg-slate-800">
+                            <Trash className="w-4 h-4 text-rose-400" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -409,6 +456,62 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialView 
             <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
               <button onClick={() => { resetNewLeadForm(); setIsAddLeadOpen(false); }} className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300">Cancel</button>
               <button onClick={handleCreateLead} className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold">Save Lead</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Lead Modal */}
+      {isViewOpen && selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">Lead Details — {selectedLead.id}</h3>
+                <p className="text-sm text-slate-400">{selectedLead.companyName} · {selectedLead.contactName}</p>
+              </div>
+              <button onClick={() => setIsViewOpen(false)} className="text-slate-300">✕</button>
+            </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-300">
+              <div><strong>Phone:</strong> {selectedLead.phone}</div>
+              <div><strong>Email:</strong> {selectedLead.email}</div>
+              <div><strong>Source:</strong> {selectedLead.source}</div>
+              <div><strong>Status:</strong> {selectedLead.status}</div>
+              <div className="md:col-span-2"><strong>Notes:</strong> {selectedLead.notes}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages Modal (Chat) */}
+      {isMessagesOpen && selectedLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-slate-900 border border-slate-800 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">Conversations — {selectedLead.companyName}</h3>
+                <p className="text-sm text-slate-400">Channel: {selectedLead.source}</p>
+              </div>
+              <button onClick={() => setIsMessagesOpen(false)} className="text-slate-300">✕</button>
+            </div>
+
+            <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-3">
+              {(selectedLead.messages ?? []).length === 0 && (
+                <div className="text-slate-400">No conversation threads available for this lead.</div>
+              )}
+              {(selectedLead.messages ?? []).map((m, idx) => (
+                <div key={idx} className={`p-3 rounded-xl ${m.isStaff ? 'bg-slate-800 text-slate-200 self-end' : 'bg-slate-950 text-slate-200'}`}>
+                  <div className="text-xs text-slate-400">{m.sender} · {m.timestamp}</div>
+                  <div className="mt-1 text-sm">{m.text}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4">
+              <textarea placeholder="Write a reply..." className="w-full rounded-xl p-3 bg-slate-950 border border-slate-800 text-sm text-slate-200" />
+              <div className="mt-2 flex justify-end">
+                <button className="rounded-2xl bg-emerald-500 px-4 py-2 text-slate-900 font-semibold">Send</button>
+              </div>
             </div>
           </div>
         </div>
