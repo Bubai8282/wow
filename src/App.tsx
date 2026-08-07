@@ -26,8 +26,8 @@ import { AnalyticsModule } from './components/modules/AnalyticsModule';
 import { AffiliateModule } from './components/modules/AffiliateModule';
 
 const MainLayout: React.FC = () => {
-  const { isModuleAllowed, activeRoleId, rolesMap, isAuthenticated } = useRBAC();
-  const [activeModule, setActiveModule] = useState<ModuleId>('super_admin_panel');
+  const { isModuleAllowed, activeRoleId, rolesMap, isAuthenticated, logout } = useRBAC();
+  const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
   const [showAllModules, setShowAllModules] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState<boolean>(false);
@@ -66,13 +66,35 @@ const MainLayout: React.FC = () => {
 
     switch (activeModule) {
       case 'super_admin_panel':
-        return <SuperAdminModule initialTab="permissions" />;
+      case 'dashboard':
+        return <SuperAdminModule initialView="dashboard" />;
+      case 'agents':
+        return <SuperAdminModule initialView="agents" />;
+      case 'staff':
+        return <SuperAdminModule initialView="staff" />;
+      case 'finance':
+        return <SuperAdminModule initialView="finance" />;
+      case 'clients':
+        return <SuperAdminModule initialView="clients" />;
+      case 'leads':
+        return <SuperAdminModule initialView="leads" />;
+      case 'social_inbox':
+        return <SuperAdminModule initialView="social_inbox" />;
+      case 'marketing':
+        return <SuperAdminModule initialView="marketing" />;
+      case 'calendar':
+        return <SuperAdminModule initialView="calendar" />;
+      case 'all_agents_performance':
+        return <SuperAdminModule initialView="all_agents_performance" />;
+      case 'logout':
+        logout();
+        return <SuperAdminModule initialView="dashboard" />;
       case 'lead_management':
-        return <SuperAdminModule initialTab="leads" />;
+        return <SuperAdminModule initialView="leads" />;
       case 'lead_messages':
-        return <SuperAdminModule initialTab="messages" />;
+        return <SuperAdminModule initialView="social_inbox" />;
       case 'call_logs':
-        return <SuperAdminModule initialTab="calls" />;
+        return <SuperAdminModule initialView="dashboard" />;
       case 'operations':
         return <OperationsModule />;
       case 'booking_desk':
@@ -113,7 +135,7 @@ const MainLayout: React.FC = () => {
           </div>
         );
       default:
-        return <SuperAdminModule initialTab="permissions" />;
+        return <SuperAdminModule initialView="dashboard" />;
     }
   };
 
@@ -136,7 +158,12 @@ const MainLayout: React.FC = () => {
         <Sidebar
           activeModule={activeModule}
           setActiveModule={(module) => {
-            setActiveModule(module);
+            if (module === 'logout') {
+              logout();
+              setActiveModule('dashboard');
+            } else {
+              setActiveModule(module);
+            }
             setIsSidebarOpen(false);
           }}
           showAllModules={showAllModules}

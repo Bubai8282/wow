@@ -1,28 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useRBAC } from '../../context/RBACContext';
-import { Lead, CallLog, RoleId, ModuleId, PermissionAction, RoleDefinition } from '../../types/rbac';
-import { ALL_MODULES } from '../../data/rolesConfig';
+import { Lead, CallLog } from '../../types/rbac';
 import {
   ShieldAlert,
   Users,
-  Lock,
-  CheckCircle2,
-  Phone,
-  ClipboardList,
   Search,
   MessageCircle,
   PlusCircle,
-  Sliders
+  Bell,
+  Moon,
+  Sun,
+  Sparkles,
+  TrendingUp,
+  BadgeCheck,
+  CalendarDays,
+  Briefcase,
+  Wallet,
+  UserRound,
+  LayoutGrid,
+  Building2,
+  Receipt,
+  ClipboardList,
+  Phone,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 
 interface SuperAdminModuleProps {
-  initialTab?: 'permissions' | 'leads' | 'messages' | 'calls';
+  initialView?: 'dashboard' | 'agents' | 'staff' | 'finance' | 'clients' | 'leads' | 'social_inbox' | 'marketing' | 'calendar' | 'all_agents_performance';
 }
 
-export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab = 'permissions' }) => {
-  const { rolesMap, updateRolePermission, addAuditLog, addLead, leads, callLogs } = useRBAC();
-  const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<RoleId>('agent');
-  const [activeTab, setActiveTab] = useState<'permissions' | 'leads' | 'messages' | 'calls'>(initialTab);
+export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialView = 'dashboard' }) => {
+  const { addAuditLog, addLead, leads, callLogs, agents, tickets, transactions } = useRBAC();
+  const [activeView, setActiveView] = useState(initialView);
+  const [isDark, setIsDark] = useState(true);
   const [leadSearch, setLeadSearch] = useState('');
   const [leadMessageSearch, setLeadMessageSearch] = useState('');
   const [callSearch, setCallSearch] = useState('');
@@ -37,8 +48,8 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
   const [newLeadNotes, setNewLeadNotes] = useState('');
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    setActiveView(initialView);
+  }, [initialView]);
 
   const resetNewLeadForm = () => {
     setNewLeadCompany('');
@@ -52,9 +63,7 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
   };
 
   const handleCreateLead = () => {
-    if (!newLeadCompany || !newLeadContact || !newLeadEmail || !newLeadPhone) {
-      return;
-    }
+    if (!newLeadCompany || !newLeadContact || !newLeadEmail || !newLeadPhone) return;
 
     const newLead: Lead = {
       id: `LD-${Date.now().toString().slice(-5)}`,
@@ -72,80 +81,309 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
     };
 
     addLead(newLead);
-    addAuditLog('Created New Lead', 'sales', `New lead ${newLead.id} created for ${newLead.companyName}`);
+    addAuditLog('Created New Lead', 'leads', `New lead ${newLead.id} created for ${newLead.companyName}`);
     resetNewLeadForm();
     setIsAddLeadOpen(false);
-    setActiveTab('leads');
+    setActiveView('leads');
   };
 
-  const targetRoleDef = rolesMap[selectedRoleForEdit];
-
-  const handlePermissionToggle = (module: ModuleId, action: PermissionAction) => {
-    const currentActions = targetRoleDef.permissions[module] || [];
-    const exists = currentActions.includes(action);
-    const updatedActions = exists
-      ? currentActions.filter((a) => a !== action)
-      : [...currentActions, action];
-
-    updateRolePermission(selectedRoleForEdit, module, updatedActions);
-  };
-
-
-  const filteredLeads: Lead[] = leads.filter(
-    (lead) =>
-      lead.companyName.toLowerCase().includes(leadSearch.toLowerCase()) ||
-      lead.contactName.toLowerCase().includes(leadSearch.toLowerCase()) ||
-      lead.email.toLowerCase().includes(leadSearch.toLowerCase()) ||
-      lead.phone.toLowerCase().includes(leadSearch.toLowerCase())
-  );
-
-  const filteredLeadMessages = leads
-    .flatMap((lead) =>
-      (lead.messages ?? []).map((message) => ({
-        ...message,
-        leadId: lead.id,
-        leadName: lead.companyName,
-        contactName: lead.contactName,
-        assignedTo: lead.assignedTo
-      }))
+  const filteredLeads: Lead[] = leads.filter((lead) =>
+    [lead.companyName, lead.contactName, lead.email, lead.phone].some((value) =>
+      value.toLowerCase().includes(leadSearch.toLowerCase())
     )
-    .filter((message) =>
-      message.leadName.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
-      message.contactName.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
-      message.text.toLowerCase().includes(leadMessageSearch.toLowerCase()) ||
-      message.sender.toLowerCase().includes(leadMessageSearch.toLowerCase())
-    );
-
-  const filteredCalls: CallLog[] = callLogs.filter(
-    (call) =>
-      call.leadName.toLowerCase().includes(callSearch.toLowerCase()) ||
-      call.agentName.toLowerCase().includes(callSearch.toLowerCase()) ||
-      call.summary.toLowerCase().includes(callSearch.toLowerCase())
   );
 
-  return (
-    <div className="p-6 space-y-6 text-slate-100 max-w-7xl mx-auto">
-      
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-900 border border-red-900/50 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
+  const filteredLeadMessages = leads.flatMap((lead) =>
+    (lead.messages ?? []).map((message) => ({
+      ...message,
+      leadId: lead.id,
+      leadName: lead.companyName,
+      contactName: lead.contactName,
+      assignedTo: lead.assignedTo
+    }))
+  ).filter((message) =>
+    [message.leadName, message.contactName, message.text, message.sender].some((value) =>
+      value.toLowerCase().includes(leadMessageSearch.toLowerCase())
+    )
+  );
+
+  const filteredCalls: CallLog[] = callLogs.filter((call) =>
+    [call.leadName, call.agentName, call.summary].some((value) => value.toLowerCase().includes(callSearch.toLowerCase()))
+  );
+
+  const kpiCards = [
+    { title: 'Total Leads', value: leads.length, change: '+12%', trend: 'up', icon: ClipboardList },
+    { title: "Today's Leads", value: leads.filter((lead) => lead.createdAt === new Date().toISOString().split('T')[0]).length, change: '+8%', trend: 'up', icon: Sparkles },
+    { title: 'Upcoming Meetings', value: 14, change: '+3%', trend: 'up', icon: CalendarDays },
+    { title: 'Pending Payments', value: transactions.filter((tx) => tx.status === 'Pending').length, change: '-2%', trend: 'down', icon: Wallet },
+    { title: 'Total Revenue', value: `$${transactions.reduce((sum, tx) => sum + tx.amount, 0).toLocaleString()}`, change: '+18%', trend: 'up', icon: Receipt },
+    { title: 'Active Cases', value: tickets.filter((t) => t.status !== 'Closed').length, change: '+5%', trend: 'up', icon: Briefcase },
+    { title: 'Completed Cases', value: tickets.filter((t) => t.status === 'Resolved' || t.status === 'Closed').length, change: '+10%', trend: 'up', icon: BadgeCheck },
+    { title: 'Lost Leads', value: leads.filter((lead) => lead.status === 'Lost').length, change: '-4%', trend: 'down', icon: ArrowDownRight },
+  ];
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-6 shadow-2xl">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold text-white">Super Admin Control Center</h1>
-              <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
-                Root System
-              </span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Super Admin Dashboard
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Full System Control: Configure the four role dashboards, fine-grained RBAC permissions, and platform financial and operations settings.
-            </p>
+            <h2 className="mt-3 text-2xl font-bold text-white">Management overview with live CRM intelligence</h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-400">Monitor agents, staff, finance, clients, leads, social inbox, marketing, calendar, and agent performance from one elegant control center.</p>
+          </div>
+          <button
+            onClick={() => setIsAddLeadOpen(true)}
+            className="rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+          >
+            <PlusCircle className="mr-2 inline h-4 w-4" /> Add New Lead
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {kpiCards.map((card) => {
+          const Icon = card.icon;
+          const isPositive = card.trend === 'up';
+          return (
+            <div key={card.title} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-slate-400">{card.title}</div>
+                <div className={`rounded-xl p-2 ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-4 text-2xl font-bold text-white">{card.value}</div>
+              <div className={`mt-2 flex items-center gap-1 text-sm ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isPositive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+                {card.change} vs last month
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Revenue growth trend</h3>
+              <p className="text-sm text-slate-400">Actual vs target revenue performance</p>
+            </div>
+            <div className="rounded-full bg-sky-500/10 px-3 py-1 text-sm font-semibold text-sky-400">Jan – Dec</div>
+          </div>
+          <div className="mt-6 grid gap-3">
+            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => {
+              const actual = 180 + index * 22;
+              const target = 175 + index * 18;
+              return (
+                <div key={month}>
+                  <div className="mb-1 flex items-center justify-between text-sm text-slate-400">
+                    <span>{month}</span>
+                    <span>Actual {actual}k / Target {target}k</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-800">
+                    <div className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-emerald-500" style={{ width: `${Math.min(100, (actual / target) * 100)}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+          <h3 className="text-lg font-semibold text-white">Smart CRM snapshot</h3>
+          <div className="mt-4 space-y-3 text-sm text-slate-300">
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-3">Live alerts: {leads.filter((lead) => lead.status === 'New').length} new leads awaiting action</div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-3">Social inbox: {leads.flatMap((lead) => lead.messages ?? []).length} conversations</div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-3">Performance status: {agents.filter((agent) => agent.status === 'Approved').length} active agents</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-        {/* No top tabs here. Module navigation is handled by the sidebar only. */}
+  const renderModuleView = () => {
+    switch (activeView) {
+      case 'agents':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Agent management, assignment, and performance view is ready for your CRM workflow.</div>;
+      case 'staff':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Staff directory, employee records, and role-based access can be managed here.</div>;
+      case 'finance':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Revenue, payments, and financial reporting views are available from this panel.</div>;
+      case 'clients':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between rounded-3xl border border-slate-800 bg-slate-900/70 p-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Clients</h3>
+                <p className="text-sm text-slate-400">B2B agents and corporate clients overview</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input placeholder="Search clients" className="w-56 rounded-2xl border border-slate-700 bg-slate-950/70 py-2 pl-10 pr-3 text-sm text-slate-200" />
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/70">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-950/50 text-slate-400 text-xs uppercase">
+                  <tr>
+                    <th className="py-3 px-4">Client ID</th>
+                    <th className="py-3 px-4">Agency</th>
+                    <th className="py-3 px-4">Owner</th>
+                    <th className="py-3 px-4">Email</th>
+                    <th className="py-3 px-4">Phone</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">City</th>
+                    <th className="py-3 px-4">Joined</th>
+                    <th className="py-3 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {agents.map((a) => (
+                    <tr key={a.id} className="hover:bg-slate-800/30">
+                      <td className="py-3 px-4 text-slate-200">{a.id}</td>
+                      <td className="py-3 px-4 text-slate-100 font-semibold">{a.agencyName}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.ownerName}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.email}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.phone}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.status}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.city}</td>
+                      <td className="py-3 px-4 text-slate-300">{a.joinedDate}</td>
+                      <td className="py-3 px-4 text-slate-300">● ● ●</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'leads':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between rounded-3xl border border-slate-800 bg-slate-900/70 p-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Lead Center</h3>
+                <p className="text-sm text-slate-400">Manage inbound inquiries, lead qualification data, and routing.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input value={leadSearch} onChange={(e) => setLeadSearch(e.target.value)} placeholder="Search leads..." className="w-64 rounded-2xl border border-slate-700 bg-slate-950/70 py-2 pl-10 pr-3 text-sm text-slate-200" />
+                </div>
+                <button onClick={() => setIsAddLeadOpen(true)} className="rounded-2xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-900">+ Add New Lead</button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/70">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-950/50 text-slate-400 text-xs uppercase">
+                  <tr>
+                    <th className="py-3 px-4">Lead ID</th>
+                    <th className="py-3 px-4">Name</th>
+                    <th className="py-3 px-4">Phone</th>
+                    <th className="py-3 px-4">Email</th>
+                    <th className="py-3 px-4">Source</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Agent</th>
+                    <th className="py-3 px-4">Created Date</th>
+                    <th className="py-3 px-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {filteredLeads.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-slate-800/30">
+                      <td className="py-3 px-4 text-slate-200 font-semibold">{lead.id}</td>
+                      <td className="py-3 px-4 text-slate-100">{lead.contactName}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.phone}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.email}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.source}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.status}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.assignedTo}</td>
+                      <td className="py-3 px-4 text-slate-300">{lead.createdAt}</td>
+                      <td className="py-3 px-4 text-slate-300">● ● ●</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'social_inbox':
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900/70 p-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white">Social inbox</h3>
+                <p className="text-sm text-slate-400">Centralized conversations across WhatsApp, Facebook, Instagram, and Telegram.</p>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input value={leadMessageSearch} onChange={(e) => setLeadMessageSearch(e.target.value)} placeholder="Search messages" className="w-56 rounded-2xl border border-slate-700 bg-slate-950/70 py-2 pl-10 pr-3 text-sm text-slate-200" />
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {['WhatsApp', 'Facebook', 'Instagram', 'Telegram'].map((channel) => (
+                <div key={channel} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="text-sm font-semibold text-white">{channel}</div>
+                  <div className="mt-2 text-sm text-slate-400">{filteredLeadMessages.filter((msg) => msg.leadName.includes(channel)).length} active conversations</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'marketing':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Marketing dashboard, campaign management, and promotion planning view.</div>;
+      case 'calendar':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Meetings, follow-ups, events, and appointments calendar view.</div>;
+      case 'all_agents_performance':
+        return <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-slate-300">Performance matrix and productivity comparison for every agent.</div>;
+      default:
+        return renderDashboard();
+    }
+  };
+
+  return (
+    <div className={`min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8 ${isDark ? 'bg-slate-950' : 'bg-slate-50 text-slate-900'}`}>
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className={`rounded-3xl border p-4 shadow-xl ${isDark ? 'border-slate-800 bg-slate-900/80' : 'border-slate-200 bg-white'}`}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`rounded-2xl p-2.5 ${isDark ? 'bg-red-500/10 text-red-400' : 'bg-red-100 text-red-600'}`}>
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-lg font-semibold">{isDark ? 'Super Admin Dashboard' : 'Super Admin Dashboard'}</div>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Admin Mode • CRM • Operations • Finance</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${isDark ? 'border-slate-700 bg-slate-950/70 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                <Search className="h-4 w-4" /> Global CRM Search
+              </label>
+              <button onClick={() => setIsDark(!isDark)} className={`rounded-2xl border p-2.5 ${isDark ? 'border-slate-700 bg-slate-950/70 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button className={`rounded-2xl border p-2.5 ${isDark ? 'border-slate-700 bg-slate-950/70 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                <Bell className="h-4 w-4" />
+              </button>
+              <button className={`rounded-2xl border p-2.5 ${isDark ? 'border-slate-700 bg-slate-950/70 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                <MessageCircle className="h-4 w-4" />
+              </button>
+              <button className={`rounded-2xl border p-2.5 ${isDark ? 'border-slate-700 bg-slate-950/70 text-slate-200' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                <UserRound className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="space-y-6">
+          {renderModuleView()}
+        </div>
       </div>
 
       {isAddLeadOpen && (
@@ -156,501 +394,25 @@ export const SuperAdminModule: React.FC<SuperAdminModuleProps> = ({ initialTab =
                 <h2 className="text-lg font-bold text-white">Add New Lead</h2>
                 <p className="text-slate-400 text-xs mt-1">Capture the lead details and assign ownership for follow-up tracking.</p>
               </div>
-              <button
-                onClick={() => setIsAddLeadOpen(false)}
-                className="rounded-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300"
-              >
-                ✕
-              </button>
+              <button onClick={() => setIsAddLeadOpen(false)} className="rounded-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300">✕</button>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Company Name</span>
-                <input
-                  value={newLeadCompany}
-                  onChange={(e) => setNewLeadCompany(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Acme Corporate Travel"
-                />
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Contact Name</span>
-                <input
-                  value={newLeadContact}
-                  onChange={(e) => setNewLeadContact(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Sara Khan"
-                />
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Email</span>
-                <input
-                  type="email"
-                  value={newLeadEmail}
-                  onChange={(e) => setNewLeadEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="sara.khan@acme.com"
-                />
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Phone</span>
-                <input
-                  value={newLeadPhone}
-                  onChange={(e) => setNewLeadPhone(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="+1 555 134 7890"
-                />
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Source</span>
-                <select
-                  value={newLeadSource}
-                  onChange={(e) => setNewLeadSource(e.target.value as Lead['source'])}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option>Website</option>
-                  <option>Referral</option>
-                  <option>Trade Show</option>
-                  <option>Email Campaign</option>
-                  <option>Partner</option>
-                  <option>Inbound Call</option>
-                </select>
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Status</span>
-                <select
-                  value={newLeadStatus}
-                  onChange={(e) => setNewLeadStatus(e.target.value as Lead['status'])}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option>New</option>
-                  <option>Contacted</option>
-                  <option>Qualified</option>
-                  <option>Proposal Sent</option>
-                  <option>Negotiation</option>
-                  <option>Won</option>
-                  <option>Lost</option>
-                </select>
-              </label>
-              <label className="space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Assigned To</span>
-                <input
-                  value={newLeadAssignedTo}
-                  onChange={(e) => setNewLeadAssignedTo(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Lead Owner"
-                />
-              </label>
-              <label className="lg:col-span-2 space-y-1 text-slate-300">
-                <span className="text-[11px] uppercase tracking-wider text-slate-400">Notes</span>
-                <textarea
-                  value={newLeadNotes}
-                  onChange={(e) => setNewLeadNotes(e.target.value)}
-                  className="w-full min-h-[120px] resize-y bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Enter initial lead notes or qualification details"
-                />
-              </label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Company Name</span><input value={newLeadCompany} onChange={(e) => setNewLeadCompany(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="Acme Corporate Travel" /></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Contact Name</span><input value={newLeadContact} onChange={(e) => setNewLeadContact(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="Sara Khan" /></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Email</span><input type="email" value={newLeadEmail} onChange={(e) => setNewLeadEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="sara.khan@acme.com" /></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Phone</span><input value={newLeadPhone} onChange={(e) => setNewLeadPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="+1 555 134 7890" /></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Source</span><select value={newLeadSource} onChange={(e) => setNewLeadSource(e.target.value as Lead['source'])} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"><option>Website</option><option>Referral</option><option>Trade Show</option><option>Email Campaign</option><option>Partner</option><option>Inbound Call</option></select></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Status</span><select value={newLeadStatus} onChange={(e) => setNewLeadStatus(e.target.value as Lead['status'])} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm"><option>New</option><option>Contacted</option><option>Qualified</option><option>Proposal Sent</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></label>
+              <label className="space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Assigned To</span><input value={newLeadAssignedTo} onChange={(e) => setNewLeadAssignedTo(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="Lead Owner" /></label>
+              <label className="lg:col-span-2 space-y-1 text-slate-300"><span className="text-[11px] uppercase tracking-wider text-slate-400">Notes</span><textarea value={newLeadNotes} onChange={(e) => setNewLeadNotes(e.target.value)} className="w-full min-h-[120px] resize-y bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="Enter initial lead notes or qualification details" /></label>
             </div>
-
             <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
-              <button
-                onClick={() => {
-                  resetNewLeadForm();
-                  setIsAddLeadOpen(false);
-                }}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateLead}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-all"
-              >
-                Save Lead
-              </button>
+              <button onClick={() => { resetNewLeadForm(); setIsAddLeadOpen(false); }} className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300">Cancel</button>
+              <button onClick={handleCreateLead} className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold">Save Lead</button>
             </div>
           </div>
         </div>
       )}
-
-      {/* TAB 1: RBAC PERMISSION MATRIX EDITOR */}
-      {activeTab === 'permissions' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-red-400" />
-                Fine-Grained Role Permission Matrix
-              </h2>
-              <p className="text-xs text-slate-400">
-                Select a role to inspect or modify allowed modules and actions (Read, Write, Create, Delete, Approve, Export).
-              </p>
-            </div>
-
-            {/* Target Role Selector */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-400 font-medium">Select Role to Edit:</span>
-              <select
-                value={selectedRoleForEdit}
-                onChange={(e) => setSelectedRoleForEdit(e.target.value as RoleId)}
-                className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                {(Object.values(rolesMap) as RoleDefinition[]).map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.title} ({role.category})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Selected Role Summary Card */}
-          <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold text-white text-sm">{targetRoleDef.title}</span>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${targetRoleDef.badgeColor}`}>
-                  {targetRoleDef.accessLevel}
-                </span>
-              </div>
-              <p className="text-slate-400">{targetRoleDef.description}</p>
-            </div>
-            <div className="text-right text-slate-400 shrink-0">
-              <div>Allowed Modules: <strong className="text-white">{targetRoleDef.allowedModules.length}</strong> / 16</div>
-            </div>
-          </div>
-
-          {/* Matrix Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3">Subsystem Module</th>
-                  <th className="py-3 px-3">Category</th>
-                  <th className="py-3 px-3 text-center">Read</th>
-                  <th className="py-3 px-3 text-center">Write</th>
-                  <th className="py-3 px-3 text-center">Create</th>
-                  <th className="py-3 px-3 text-center">Delete</th>
-                  <th className="py-3 px-3 text-center">Approve</th>
-                  <th className="py-3 px-3 text-center">Export</th>
-                  <th className="py-3 px-3 text-center">Configure</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {ALL_MODULES.map((module) => {
-                  const currentPerms = targetRoleDef.permissions[module.id] || [];
-                  const actionsList: PermissionAction[] = ['read', 'write', 'create', 'delete', 'approve', 'export', 'configure'];
-
-                  return (
-                    <tr key={module.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3 px-3 font-semibold text-white">{module.title}</td>
-                      <td className="py-3 px-3 text-slate-400 text-[11px]">{module.category}</td>
-
-                      {actionsList.map((act) => {
-                        const isChecked = currentPerms.includes(act);
-                        return (
-                          <td key={act} className="py-3 px-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handlePermissionToggle(module.id, act)}
-                              disabled={selectedRoleForEdit === 'super_admin'}
-                              className="rounded border-slate-700 bg-slate-950 text-red-500 focus:ring-red-500 w-4 h-4 cursor-pointer disabled:opacity-50"
-                            />
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: LEAD MANAGEMENT */}
-      {activeTab === 'leads' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-red-400" />
-                Lead Management & Opportunity Pipeline
-              </h2>
-              <p className="text-xs text-slate-400">
-                Monitor new business leads, qualification status, lead assignment, and follow-up scheduling for corporate accounts.
-              </p>
-            </div>
-            <div className="relative text-slate-400 text-xs">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={leadSearch}
-                onChange={(e) => setLeadSearch(e.target.value)}
-                placeholder="Search leads by company, contact, email or phone"
-                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-xs">
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-emerald-400" />
-                Pipeline Summary
-              </h3>
-              <div className="space-y-3 text-slate-300">
-                <div className="flex justify-between"><span>New Leads</span><strong>{leads.filter((lead) => lead.status === 'New').length}</strong></div>
-                <div className="flex justify-between"><span>Contacted</span><strong>{leads.filter((lead) => lead.status === 'Contacted').length}</strong></div>
-                <div className="flex justify-between"><span>Qualified</span><strong>{leads.filter((lead) => lead.status === 'Qualified').length}</strong></div>
-                <div className="flex justify-between"><span>Proposals Sent</span><strong>{leads.filter((lead) => lead.status === 'Proposal Sent').length}</strong></div>
-                <div className="flex justify-between"><span>Won / Lost</span><strong>{leads.filter((lead) => lead.status === 'Won' || lead.status === 'Lost').length}</strong></div>
-              </div>
-            </div>
-
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                    <PlusCircle className="w-4 h-4 text-sky-400" />
-                    Quick Lead Actions
-                  </h3>
-                  <p className="text-slate-400 text-[11px]">Create or assign new leads to executive sales owners in a single view.</p>
-                </div>
-                <button
-                    onClick={() => setIsAddLeadOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700"
-                  >
-                    New Lead
-                  </button>
-              </div>
-              <div className="text-slate-300 text-[11px] space-y-2">
-                <div>Top account owners: Elena Rostova, Marcus Vance, Carlos Mendez</div>
-                <div>Next follow-up: 2 scheduled calls this week</div>
-                <div>Avg. lead response time: 4.1 hrs</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3">Company</th>
-                  <th className="py-3 px-3">Contact</th>
-                  <th className="py-3 px-3">Source</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Owner</th>
-                  <th className="py-3 px-3">Last Activity</th>
-                  <th className="py-3 px-3">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-white">{lead.companyName}</td>
-                    <td className="py-3 px-3 text-slate-300">{lead.contactName} · {lead.phone}</td>
-                    <td className="py-3 px-3 text-slate-400">{lead.source}</td>
-                    <td className="py-3 px-3 text-slate-300"><span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-slate-200">{lead.status}</span></td>
-                    <td className="py-3 px-3 text-slate-300">{lead.assignedTo}</td>
-                    <td className="py-3 px-3 text-slate-400">{lead.lastActivity}</td>
-                    <td className="py-3 px-3 text-slate-400 truncate max-w-[220px]">{lead.notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: CALL LOGS */}
-      {activeTab === 'messages' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-red-400" />
-                Lead Messages & Conversation Threads
-              </h2>
-              <p className="text-xs text-slate-400">
-                Review lead conversations in a unified inbox, filter messages, and track response handoff for sales opportunities.
-              </p>
-            </div>
-            <div className="relative text-slate-400 text-xs">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={leadMessageSearch}
-                onChange={(e) => setLeadMessageSearch(e.target.value)}
-                placeholder="Search lead messages by company, contact, sender or content"
-                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-xs">
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-emerald-400" />
-                Message Inbox Summary
-              </h3>
-              <div className="space-y-3 text-slate-300">
-                <div className="flex justify-between"><span>Total Messages</span><strong>{filteredLeadMessages.length}</strong></div>
-                <div className="flex justify-between"><span>Open Lead Threads</span><strong>{leads.filter((lead) => lead.messages.length > 0).length}</strong></div>
-                <div className="flex justify-between"><span>Staff Replies</span><strong>{filteredLeadMessages.filter((msg) => msg.isStaff).length}</strong></div>
-                <div className="flex justify-between"><span>Customer Inquiries</span><strong>{filteredLeadMessages.filter((msg) => !msg.isStaff).length}</strong></div>
-              </div>
-            </div>
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <PlusCircle className="w-4 h-4 text-sky-400" />
-                Quick Message Actions
-              </div>
-              <button className="w-full px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
-                Review Recent Replies
-              </button>
-              <p className="text-slate-400 text-[11px]">See top lead conversations and ensure staff responses remain timely.</p>
-            </div>
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Users className="w-4 h-4 text-indigo-400" />
-                Top Lead Threads
-              </div>
-              <div className="text-slate-300 text-[11px] space-y-2">
-                {leads.slice(0, 3).map((lead) => (
-                  <div key={lead.id} className="rounded-xl bg-slate-950/80 p-3 border border-slate-800">
-                    <div className="font-semibold text-slate-100">{lead.companyName}</div>
-                    <div>{lead.contactName} · {lead.status}</div>
-                    <div className="text-[11px] text-slate-400">{lead.messages.length} messages · last activity {lead.lastActivity}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3">Lead / Company</th>
-                  <th className="py-3 px-3">Contact</th>
-                  <th className="py-3 px-3">Sender</th>
-                  <th className="py-3 px-3">Message</th>
-                  <th className="py-3 px-3">Type</th>
-                  <th className="py-3 px-3">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {filteredLeadMessages.map((message, idx) => (
-                  <tr key={`${message.leadId}-${idx}`} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-white">{message.leadName}</td>
-                    <td className="py-3 px-3 text-slate-300">{message.contactName}</td>
-                    <td className="py-3 px-3 text-slate-300">{message.sender}</td>
-                    <td className="py-3 px-3 text-slate-400 truncate max-w-[260px]">{message.text}</td>
-                    <td className="py-3 px-3 text-slate-300">{message.isStaff ? 'Staff' : 'Lead'}</td>
-                    <td className="py-3 px-3 text-slate-400">{message.timestamp}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'calls' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Phone className="w-4 h-4 text-red-400" />
-                Sales Call Logs & Follow-Up Tracker
-              </h2>
-              <p className="text-xs text-slate-400">
-                Review logged call outcomes, connected conversations, voicemail attempts, and scheduled callbacks.
-              </p>
-            </div>
-            <div className="relative text-slate-400 text-xs">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={callSearch}
-                onChange={(e) => setCallSearch(e.target.value)}
-                placeholder="Search call logs by lead, agent, or notes"
-                className="pl-10 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white w-full sm:w-80 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <MessageCircle className="w-4 h-4 text-emerald-400" />
-                Call Activity Summary
-              </div>
-              <div className="text-slate-300 space-y-2">
-                <div className="flex justify-between"><span>Total Calls</span><strong>{callLogs.length}</strong></div>
-                <div className="flex justify-between"><span>Connected</span><strong>{callLogs.filter((log) => log.outcome === 'Connected').length}</strong></div>
-                <div className="flex justify-between"><span>Callbacks Scheduled</span><strong>{callLogs.filter((log) => log.outcome === 'Callback Scheduled').length}</strong></div>
-                <div className="flex justify-between"><span>Voicemail</span><strong>{callLogs.filter((log) => log.outcome === 'Voicemail').length}</strong></div>
-              </div>
-            </div>
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <ClipboardList className="w-4 h-4 text-sky-400" />
-                Next Follow-Ups
-              </div>
-              <div className="text-slate-300 text-[11px] space-y-2">
-                {callLogs.filter((log) => log.followUpDate).slice(0, 3).map((log) => (
-                  <div key={log.id} className="rounded-xl bg-slate-950/80 p-3 border border-slate-800">
-                    <div className="font-semibold text-slate-100">{log.leadName}</div>
-                    <div>{log.followUpDate} · {log.agentName}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <PlusCircle className="w-4 h-4 text-sky-400" />
-                Quick Call Actions
-              </div>
-              <button className="w-full px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700">
-                Log New Call
-              </button>
-              <p className="text-slate-400 text-[11px]">Use the sales call record system to capture outcomes and next step commitments.</p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3">Lead</th>
-                  <th className="py-3 px-3">Agent</th>
-                  <th className="py-3 px-3">Call Time</th>
-                  <th className="py-3 px-3">Duration</th>
-                  <th className="py-3 px-3">Outcome</th>
-                  <th className="py-3 px-3">Summary</th>
-                  <th className="py-3 px-3">Follow-Up</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {filteredCalls.map((call) => (
-                  <tr key={call.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-white">{call.leadName}</td>
-                    <td className="py-3 px-3 text-slate-300">{call.agentName}</td>
-                    <td className="py-3 px-3 text-slate-400">{call.callTime}</td>
-                    <td className="py-3 px-3 text-slate-400">{call.durationMinutes} mins</td>
-                    <td className="py-3 px-3 text-slate-300">{call.outcome}</td>
-                    <td className="py-3 px-3 text-slate-400 truncate max-w-[220px]">{call.summary}</td>
-                    <td className="py-3 px-3 text-slate-400">{call.followUpDate || 'None'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-
     </div>
   );
 };

@@ -275,7 +275,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           )}
 
                           {!allowed && (
-                            <Lock className="w-3 h-3 text-slate-400" title="Restricted by RBAC Policy" />
+                            <span title="Restricted by RBAC Policy">
+                              <Lock className="w-3 h-3 text-slate-400" />
+                            </span>
                           )}
                           {allowed && isActive && (
                             <ChevronRight className="w-3.5 h-3.5 text-white/80" />
